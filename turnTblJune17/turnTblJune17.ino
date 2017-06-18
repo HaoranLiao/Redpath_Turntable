@@ -96,7 +96,7 @@ void setup() {
     speed_rotation = 5;
   }
   else {
-    for (int i=0;i<3;i++) {
+    for (int i=0; i<3; i++) {
       digitalWrite(LED_BUILTIN, HIGH);
       delay(1000);
       digitalWrite(LED_BUILTIN, LOW);
@@ -110,34 +110,50 @@ void setup() {
 void loop()
 { 
   if (MODE==2) {
-     for (int i=0;i<num_rotation;i++) {
-    
-     }
+    for (int i=0; i<num_rotation; i++) {
+      if (i==num_rotation-1) {
+        digitalWrite(LED_BUILTIN, HIGH);
+        rotate(num_step_partial, rotation_buffer_size, speed_rotation);
+        digitalWrite(LED_BUILTIN, LOW);
+      }
+      else {
+        digitalWrite(LED_BUILTIN, HIGH);
+        rotate(num_step_full, rotation_buffer_size, speed_rotation);
+        digitalWrite(LED_BUILTIN, LOW);
+      }
+      delay(pause_bw_rotation); 
+    }
   }
   else {
-    for (int i=0;i<num_rotation;i++) {
-    
+    for (int i=0; i<num_rotation; i++) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      rotate(num_step_full, rotation_buffer_size, speed_rotation);
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(pause_bw_rotation); 
     }
-    rotate(3200);
-    delay(pause_bw_rotation); 
   }
-  exit(0);
 }
   
 
-void rotate(int steps)
+void rotate(int num_step, int buffer_size, int speed_rotation)
 { 
-  for(int i=0; i < steps; i++)
+  for(int i=0; i<num_step; i++)
   { 
     // Handle accelration and decceleration in a very naive way (but it works)
-    int d=2;
-    if (i<10) d=12-i;
-    if (i>steps-10) d=11-(steps-i);
+    int d = speed_rotation;
+    //if (i<10) d=12-i;
+    //if (i>num_step-10) d = 11-(num_step-i);
+    if (i<buffer_size) {
+      d = buffer_size+speed_rotation-i;
+    }
+    else if (i>num_step-buffer_size) {
+      d = buffer_size+speed_rotation-1-(num_step-i);
+    }
     
     // Do a step
     digitalWrite(X_STEP_PIN, HIGH);   
-    delay(1); 
+    delay(d); 
     digitalWrite(X_STEP_PIN, LOW); 
-    delay(1); 
+    delay(d); 
   } 
 } 
