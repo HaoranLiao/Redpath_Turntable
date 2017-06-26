@@ -9,7 +9,7 @@
 #define NUM_STEP_REVOL   3200
 
 //All capitalized (undefined) variables are the ones pre-set according to user input. 
-//Before the part for the user input is coded, I assign them some values for testing.
+//The assigned values are default.
 
 //MODE = 0, device checking mode where the motor will be turned on until being disabled
 //MODE = 1, checking mode where the table will slowly rotate for one revolution for user 
@@ -139,7 +139,7 @@ void rotate(int num_step, int buffer_size, int speed_rotation)
 { 
   for(int i=0; i<num_step; i++)
   { 
-    // Handle accelration and decceleration in a very naive way (but it works)
+    // Handle accelration and decceleration
     int d = speed_rotation;
     //if (i<10) d=12-i;
     //if (i>num_step-10) d = 11-(num_step-i);
