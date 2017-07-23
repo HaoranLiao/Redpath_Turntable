@@ -6,6 +6,9 @@
 #define X_MIN_PIN           3
 #define X_MAX_PIN           2
 
+#define RELAY_PIN          11
+#define RAMP_LED_PIN       13
+
 #define NUM_STEP_REVOL   3200
 
 boolean DEBUG = true;
@@ -29,7 +32,7 @@ int ENABLED = 1;
 //MODE = 2, the normal function mode, 
 //required input: ANGLE_PER_ROTATION, PAUSE_BW_ROTATION;
 //MODE = 3, the manual mode, ALL parameters are required, according to user input
-int MODE = 1;
+int MODE = 2;
 //The angle for each rotation, set to 5 degrees
 int ANGLE_PER_ROTATION = 10;
 //The delay between each rotations, set to 1000 ms
@@ -68,6 +71,9 @@ void setup() {
   pinMode(X_DIR_PIN, OUTPUT);
   pinMode(X_ENABLE_PIN, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
+  
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(RAMP_LED_PIN, OUTPUT);
 
   //motor activate and inactivate
   if (ENABLED==1) {
@@ -169,8 +175,8 @@ void setup() {
   }
 
   //display settings
-  msg(DEBUG, DIR, MODE, ANGLE_PER_ROTATION, num_rotation, num_step_full, num_step_partial, 
-      pause_bw_rotation, rotation_buffer_size, speed_rotation);
+//  msg(DEBUG, DIR, MODE, ANGLE_PER_ROTATION, num_rotation, num_step_full, num_step_partial, 
+//      pause_bw_rotation, rotation_buffer_size, speed_rotation);
 }
 
 void loop()
@@ -193,7 +199,8 @@ void loop()
         rotate(num_step_full, rotation_buffer_size, speed_rotation);
         digitalWrite(LED_BUILTIN, LOW);
       }
-      delay(pause_bw_rotation); 
+      trigger_camera(3000, pause_bw_rotation);
+//      delay(pause_bw_rotation); 
     }
   }
   else {
@@ -255,4 +262,12 @@ void msg(int DEBUG, int MODE, int DIR, int ANGLE_PER_ROTATION, int num_rotation,
           pause_bw_rotation,rotation_buffer_size, speed_rotation);
   Serial.print(str);
 }
+
+void trigger_camera(int relay_ontime, int relay_offtime){
+      digitalWrite(RELAY_PIN, HIGH);
+      delay(relay_ontime);
+      LED_blink(100,1,1);
+      digitalWrite(RELAY_PIN, LOW);
+      delay(relay_offtime);
+  }
 
