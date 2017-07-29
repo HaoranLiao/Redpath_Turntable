@@ -1,3 +1,7 @@
+#include <ClickEncoder.h>
+
+#include <TimerOne.h>
+
 // include the library code:
 //#include <U8glib.h>
 #include <LiquidCrystal.h>
@@ -6,6 +10,13 @@
 // with the arduino pin number it is connected to
 const int rs = 16, en = 17, d5 = 23, d6 = 25, d7 = 27, d8 = 29;
 LiquidCrystal lcd(rs, en, d5, d6, d7, d8);
+
+ClickEncoder *encoder;
+
+void timerIsr() {
+  encoder->service();
+}
+
 
 #define BEEPER_PIN        37
 
@@ -78,12 +89,116 @@ int pause_bw_rotation;
 int rotation_buffer_size;
 int speed_rotation;
 
+void startModeMenu(){
+  int16_t prev_state, curr_state;
+  prev_state = -1;
+  curr_state = -1;
+  bool isButtonPressed = false;
+  bool isKnobTurned = false;
+  int btn_enc_val;
+  String modes[4] = {"Calibration", "Automatic", "Manual", "Test"};
+  MODE = 0;
+  lcd.setCursor(0,1);
+  lcd.print(modes[MODE]);
+  while(!isButtonPressed){
+    curr_state = curr_state+(encoder->getValue());
+//    lcd.setCursor(0, 2);
+//    lcd.print(prev_state);
+//    lcd.setCursor(0, 3);
+//    lcd.print(curr_state);
+      lcd.setCursor(0, 2);
+      lcd.print(MODE);
+
+    if(curr_state != prev_state) {
+      
+      if(curr_state > prev_state){
+        MODE += 1;
+      
+      }
+      else{
+        MODE += 3;
+      }
+      MODE = MODE%4;
+      updateModeMenu(modes[MODE]);
+      prev_state = curr_state;
+    }
+
+    ClickEncoder::Button b = encoder->getButton();
+    if (b != ClickEncoder::Open) {
+      lcd.setCursor(8,4);
+      #define VERBOSECASE(label) case label: lcd.print(#label); break;
+      switch (b) {
+        VERBOSECASE(ClickEncoder::Pressed);
+        VERBOSECASE(ClickEncoder::Held);
+        VERBOSECASE(ClickEncoder::Released);
+        case ClickEncoder::Clicked:
+          showSelectedMode(modes[MODE]);
+          isButtonPressed = true;
+      }
+    }
+  }
+  startModeSubMenu(MODE);   
+}
+
+void startModeSubMenu(int mode){
+  switch(mode){
+    case 0:
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Calibrating Mode");  
+
+    case 1:
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Automatic Mode");
+      
+    case 2:
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Manual Mode");
+      
+  }
+    
+}
+
+void startManualSubMenu(){
+    
+}
+
+
+void updateModeMenu(String option){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Mode Menu");
+  lcd.setCursor(0,1); 
+  lcd.print(option);
+  
+}
+
+void showSelectedMode(String mode){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("selected MODE: ");  
+  lcd.setCursor(0,1);
+  lcd.print(mode);
+}
+
 void setup() {
     // set up the LCD's number of columns and rows:
   lcd.begin(20, 4);
   // Print a message to the LCD.
-  lcd.print("hello, world!");
+  lcd.print("Welcome!");
 
+//  int16_t prev_state, curr_state;
+  encoder = new ClickEncoder( BTN_EN1,BTN_EN2,BTN_ENC,4);
+
+  Timer1.initialize(2000);
+  Timer1.attachInterrupt(timerIsr); 
+  
+//  prev_state = -1;
+//  curr_state = -1;
+
+//  encoder->setAccelerationEnabled(!encoder->getAccelerationEnabled());
   
   
   //clear board memory
@@ -96,18 +211,8 @@ void setup() {
     Serial.begin(9600);
   }
 
-  bool modeMenuEnabled = true;
-while(modeMenuEnabled){
-  int btn_enc_val = digitalRead(BTN_ENC);
-  int btn_en1_val = digitalRead(BTN_EN1);
-  int btn_en2_val = digitalRead(BTN_EN2);
-//  Serial.println("BTN_ENC ");
-//  Serial.print(btn_enc_val);
-//  Serial.println("BTN_EN1 ");
-//  Serial.print(btn_en1_val);
-  Serial.println("BTN_EN2 ");
-  Serial.print(btn_en2_val);
-} 
+  startModeMenu();
+
   pinMode(X_STEP_PIN, OUTPUT);
   pinMode(X_DIR_PIN, OUTPUT);
   pinMode(X_ENABLE_PIN, OUTPUT);
@@ -225,9 +330,9 @@ void loop()
   
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
-  lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  lcd.print(millis() / 1000);
+//  lcd.setCursor(0, 1);
+//  // print the number of seconds since reset:
+//  lcd.print(millis() / 1000);
   digitalWrite(LCD_BACKLIGHT_PIN, HIGH);
 
   
