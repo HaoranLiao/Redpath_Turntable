@@ -1,3 +1,25 @@
+// include the library code:
+//#include <U8glib.h>
+#include <LiquidCrystal.h>
+
+// initialize the library by associating any needed LCD interface pin
+// with the arduino pin number it is connected to
+const int rs = 16, en = 17, d5 = 23, d6 = 25, d7 = 27, d8 = 29;
+LiquidCrystal lcd(rs, en, d5, d6, d7, d8);
+
+#define BEEPER_PIN        37
+
+#define BTN_EN1           31
+#define BTN_EN2           33
+#define BTN_ENC           35
+
+#define SD_DETECT_PIN     49
+#define KILL_PIN          41
+
+#define LCD_BACKLIGHT_PIN 39
+
+
+
 #include <EEPROM.h>
 
 #define X_STEP_PIN         54
@@ -57,6 +79,13 @@ int rotation_buffer_size;
 int speed_rotation;
 
 void setup() {
+    // set up the LCD's number of columns and rows:
+  lcd.begin(20, 4);
+  // Print a message to the LCD.
+  lcd.print("hello, world!");
+
+  
+  
   //clear board memory
   for (int i=0; i<EEPROM.length(); i++) {
     EEPROM.write(i, 0);
@@ -66,7 +95,19 @@ void setup() {
   if (DEBUG){
     Serial.begin(9600);
   }
-  
+
+  bool modeMenuEnabled = true;
+while(modeMenuEnabled){
+  int btn_enc_val = digitalRead(BTN_ENC);
+  int btn_en1_val = digitalRead(BTN_EN1);
+  int btn_en2_val = digitalRead(BTN_EN2);
+//  Serial.println("BTN_ENC ");
+//  Serial.print(btn_enc_val);
+//  Serial.println("BTN_EN1 ");
+//  Serial.print(btn_en1_val);
+  Serial.println("BTN_EN2 ");
+  Serial.print(btn_en2_val);
+} 
   pinMode(X_STEP_PIN, OUTPUT);
   pinMode(X_DIR_PIN, OUTPUT);
   pinMode(X_ENABLE_PIN, OUTPUT);
@@ -85,7 +126,7 @@ void setup() {
     dbgmsg("Motor...disabled");
     for (;;);
   }
-
+  
   //assign parameter based on MODE
   switch(MODE) { 
     case 1:
@@ -181,6 +222,15 @@ void setup() {
 
 void loop()
 { 
+  
+  // set the cursor to column 0, line 1
+  // (note: line 1 is the second row, since counting begins with 0):
+  lcd.setCursor(0, 1);
+  // print the number of seconds since reset:
+  lcd.print(millis() / 1000);
+  digitalWrite(LCD_BACKLIGHT_PIN, HIGH);
+
+  
   dbgmsg("Start");
   char count[20];
   if (MODE==2) {
