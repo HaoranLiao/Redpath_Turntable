@@ -25,7 +25,7 @@ void timerIsr() {
 #define BTN_ENC           35
 
 #define SD_DETECT_PIN     49
-#define KILL_PIN          41
+//#define KILL_PIN          41
 
 #define LCD_BACKLIGHT_PIN 39
 
@@ -69,7 +69,7 @@ int MODE = 2;
 //The angle for each rotation, set to 5 degrees
 int ANGLE_PER_ROTATION = 10;
 //The delay between each rotations, set to 1000 ms
-int PAUSE_BW_ROTATION = 1000;
+long PAUSE_BW_ROTATION = 1000;
 //The direction of rotating, 1: clockwise, 0: counterclockwise
 int DIR = 1;
 
@@ -96,7 +96,7 @@ void startModeMenu(){
   bool isButtonPressed = false;
   bool isKnobTurned = false;
   int btn_enc_val;
-  String modes[4] = {"Calibration", "Automatic", "Manual", "Test"};
+  String modes[4] = {"Test", "Calibration", "Automatic", "Manual"};
   MODE = 0;
   lcd.setCursor(0,1);
   lcd.print(modes[MODE]);
@@ -108,7 +108,7 @@ void startModeMenu(){
 //    lcd.print(curr_state);
       lcd.setCursor(0, 2);
       lcd.print(MODE);
-
+      
     if(curr_state != prev_state) {
       
       if(curr_state > prev_state){
@@ -126,11 +126,7 @@ void startModeMenu(){
     ClickEncoder::Button b = encoder->getButton();
     if (b != ClickEncoder::Open) {
       lcd.setCursor(8,4);
-      #define VERBOSECASE(label) case label: lcd.print(#label); break;
       switch (b) {
-        VERBOSECASE(ClickEncoder::Pressed);
-        VERBOSECASE(ClickEncoder::Held);
-        VERBOSECASE(ClickEncoder::Released);
         case ClickEncoder::Clicked:
           showSelectedMode(modes[MODE]);
           isButtonPressed = true;
@@ -140,31 +136,244 @@ void startModeMenu(){
   startModeSubMenu(MODE);   
 }
 
-void startModeSubMenu(int mode){
-  switch(mode){
-    case 0:
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Calibrating Mode");  
-
+void startModeSubMenu(int MODE){
+  switch(MODE){
     case 1:
       lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("Automatic Mode");
-      
+      lcd.print("Calibrating Mode");
+      break;
+
     case 2:
       lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("Manual Mode");
+      lcd.print("Automatic Mode");
+      startRotationAngleMenu(ANGLE_PER_ROTATION);
+      startRotationPauseMenu(PAUSE_BW_ROTATION);
+      break;
       
+    case 3:
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Manual Mode");
+      startRotationAngleMenu(ANGLE_PER_ROTATION);
+      startRotationPauseMenu(PAUSE_BW_ROTATION);
+      startRotationBufferMenu(ROTATION_BUFFER_SIZE);
+      startRotationSpeedMenu(SPEED_ROTATION);
+      startRotationDirMenu(DIR);
+      startRotationNumberMenu(NUM_ROTATION);
+      break;
   }
     
 }
 
-void startManualSubMenu(){
+void startRotationAngleMenu(int ANGLE_PER_ROTATION) {
+        int16_t prev_state, curr_state;
+        prev_state = 0;
+        curr_state = 0;
+        bool isButtonPressed = false;
+        bool isKnobTurned = false;
+        updateRotationAngleMenu(ANGLE_PER_ROTATION);
+        while(!isButtonPressed){
+          curr_state = curr_state+encoder->getValue();     
+          
+          if(curr_state != prev_state) {
+            
+            if(curr_state > prev_state){
+              ANGLE_PER_ROTATION += 2;
+            }
+            else{
+              ANGLE_PER_ROTATION += 358;
+            }
+            ANGLE_PER_ROTATION = ANGLE_PER_ROTATION%360;
+            updateRotationAngleMenu(ANGLE_PER_ROTATION);
+            prev_state = curr_state;
+          }
+      
+          ClickEncoder::Button b = encoder->getButton();
+          if (b != ClickEncoder::Open) {
+            switch (b) {
+              case ClickEncoder::Clicked:
+                isButtonPressed = true;
+            }
+          }
+        }
     
 }
 
+void startRotationPauseMenu(int PAUSE_BW_ROTATION) {
+        PAUSE_BW_ROTATION = PAUSE_BW_ROTATION/100;
+        int16_t prev_state, curr_state;
+        prev_state = 0;
+        curr_state = 0;
+        bool isButtonPressed = false;
+        bool isKnobTurned = false;
+        updateRotationPauseMenu(PAUSE_BW_ROTATION);
+        while(!isButtonPressed){
+          curr_state = curr_state+encoder->getValue();     
+          
+          if(curr_state != prev_state) {
+            
+            if(curr_state > prev_state){
+              PAUSE_BW_ROTATION += 2;
+            }
+            else{
+              PAUSE_BW_ROTATION += 598;
+            }
+            
+            PAUSE_BW_ROTATION = PAUSE_BW_ROTATION%600;
+            updateRotationPauseMenu(PAUSE_BW_ROTATION);
+            prev_state = curr_state;
+          }
+      
+          ClickEncoder::Button b = encoder->getButton();
+          if (b != ClickEncoder::Open) {
+            switch (b) {
+              case ClickEncoder::Clicked:
+                
+                isButtonPressed = true;
+            }
+          }
+        }
+
+        PAUSE_BW_ROTATION = PAUSE_BW_ROTATION*100;
+}
+
+void startRotationBufferMenu(int ROTATION_BUFFER_SIZE) {
+        int16_t prev_state, curr_state;
+        prev_state = 0;
+        curr_state = 0;
+        bool isButtonPressed = false;
+        bool isKnobTurned = false;
+        updateRotationBufferMenu(ROTATION_BUFFER_SIZE);
+        while(!isButtonPressed){
+          curr_state = curr_state+encoder->getValue();     
+          
+          if(curr_state != prev_state) {
+            
+            if(curr_state > prev_state){
+              ROTATION_BUFFER_SIZE += 1;
+            }
+            else{
+              ROTATION_BUFFER_SIZE += 49;
+            }
+            ROTATION_BUFFER_SIZE = ROTATION_BUFFER_SIZE%50;
+            updateRotationBufferMenu(ROTATION_BUFFER_SIZE);
+            prev_state = curr_state;
+          }
+      
+          ClickEncoder::Button b = encoder->getButton();
+          if (b != ClickEncoder::Open) {
+            switch (b) {
+              case ClickEncoder::Clicked:
+                isButtonPressed = true;
+            }
+          }
+        }
+    
+}
+
+void startRotationSpeedMenu(int SPEED_ROTATION) {
+        SPEED_ROTATION -= 5;
+        int speed_temp = 15-SPEED_ROTATION;
+        int16_t prev_state, curr_state;
+        prev_state = 0;
+        curr_state = 0;
+        bool isButtonPressed = false;
+        bool isKnobTurned = false;
+        updateRotationSpeedMenu(SPEED_ROTATION);
+        while(!isButtonPressed){
+          curr_state = curr_state+encoder->getValue();     
+          
+          if(curr_state != prev_state) {
+            
+            if(curr_state > prev_state){
+              speed_temp += 1;
+            }
+            else{
+              speed_temp += 15;
+            }
+            speed_temp = speed_temp%16;
+            updateRotationSpeedMenu(speed_temp);
+//            lcd.setCursor(0,4);
+//            lcd.print((15-speed_temp)+5);
+            prev_state = curr_state;
+          }
+      
+          ClickEncoder::Button b = encoder->getButton();
+          if (b != ClickEncoder::Open) {
+            switch (b) {
+              case ClickEncoder::Clicked:
+                isButtonPressed = true;
+            }
+          }
+        }
+        SPEED_ROTATION = 15-speed_temp;
+        SPEED_ROTATION += 5;  
+}
+
+void startRotationDirMenu(int DIR) {
+        int16_t prev_state, curr_state;
+        prev_state = 0;
+        curr_state = 0;
+        bool isButtonPressed = false;
+        bool isKnobTurned = false;
+        updateRotationDirMenu(DIR);
+        while(!isButtonPressed){
+          curr_state = curr_state+encoder->getValue();     
+          
+          if(curr_state != prev_state) {
+            
+            DIR += 1;
+            DIR = DIR%2;
+            updateRotationDirMenu(DIR);
+            prev_state = curr_state;
+          }
+      
+          ClickEncoder::Button b = encoder->getButton();
+          if (b != ClickEncoder::Open) {
+            switch (b) {
+              case ClickEncoder::Clicked:
+                isButtonPressed = true;
+            }
+          }
+        }
+    
+}
+
+void startRotationNumberMenu(int NUM_ROTATION) {
+        int16_t prev_state, curr_state;
+        prev_state = 0;
+        curr_state = 0;
+        bool isButtonPressed = false;
+        bool isKnobTurned = false;
+        updateRotationNumberMenu(NUM_ROTATION);
+        while(!isButtonPressed){
+          curr_state = curr_state+encoder->getValue();     
+          
+          if(curr_state != prev_state) {
+            
+            if(curr_state > prev_state){
+              NUM_ROTATION += 1;
+            }
+            else{
+              NUM_ROTATION += 999;
+            }
+            NUM_ROTATION = NUM_ROTATION%1000;
+            updateRotationNumberMenu(NUM_ROTATION);
+            prev_state = curr_state;
+          }
+      
+          ClickEncoder::Button b = encoder->getButton();
+          if (b != ClickEncoder::Open) {
+            switch (b) {
+              case ClickEncoder::Clicked:
+                isButtonPressed = true;
+            }
+          }
+        }
+    
+}
 
 void updateModeMenu(String option){
   lcd.clear();
@@ -172,16 +381,86 @@ void updateModeMenu(String option){
   lcd.print("Mode Menu");
   lcd.setCursor(0,1); 
   lcd.print(option);
-  
 }
 
-void showSelectedMode(String mode){
+void showSelectedMode(String MODE){
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("selected MODE: ");  
   lcd.setCursor(0,1);
-  lcd.print(mode);
+  lcd.print(MODE);
 }
+
+void updateRotationAngleMenu(int ANGLE_PER_ROTATION){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Set parameter:");
+  lcd.setCursor(0,1);
+  lcd.print("Angle per rotation =");
+  lcd.setCursor(0, 2);
+  lcd.print(ANGLE_PER_ROTATION);
+  lcd.setCursor(4, 2);
+  lcd.print("Deg");
+}
+
+void updateRotationPauseMenu(int PAUSE_BW_ROTATION){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Set parameter:");
+  lcd.setCursor(0,1);
+  lcd.print("Pause bw rotation =");
+  lcd.setCursor(0, 2);
+  lcd.print(PAUSE_BW_ROTATION);
+  lcd.setCursor(5, 2);
+  lcd.print("x100ms");
+}
+
+void updateRotationBufferMenu(int ROTATION_BUFFER_SIZE){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Set parameter:");
+  lcd.setCursor(0,1);
+  lcd.print("Rotation buffer =");
+  lcd.setCursor(0, 2);
+  lcd.print(ROTATION_BUFFER_SIZE);
+}
+
+void updateRotationSpeedMenu(int SPEED_ROTATION){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Set parameter:");
+  lcd.setCursor(0,1);
+  lcd.print("Rotation speed =");
+  lcd.setCursor(0, 2);
+  lcd.print(SPEED_ROTATION);
+}
+
+void updateRotationDirMenu(int DIR){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Set parameter:");
+  lcd.setCursor(0,1);
+  lcd.print("Rotation direction =");
+  lcd.setCursor(0, 2);
+  if (DIR==1){
+    lcd.print("Clockwise");
+  }
+  else{
+    lcd.print("Counter-clockwise");
+  }
+}
+
+void updateRotationNumberMenu(int NUM_ROTATION){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Set parameter:");
+  lcd.setCursor(0,1);
+  lcd.print("Rotation number =");
+  lcd.setCursor(0, 2);
+  lcd.print(NUM_ROTATION);
+}
+
+
 
 void setup() {
     // set up the LCD's number of columns and rows:
@@ -202,16 +481,16 @@ void setup() {
   
   
   //clear board memory
-  for (int i=0; i<EEPROM.length(); i++) {
-    EEPROM.write(i, 0);
-    LED_blink(1,0,1);
-  }
+//  for (int i=0; i<EEPROM.length(); i++) {
+//    EEPROM.write(i, 0);
+//    LED_blink(1,0,1);
+//  }
  
   if (DEBUG){
     Serial.begin(9600);
   }
 
-  startModeMenu();
+  //pinMode(KILL_PIN, INPUT);
 
   pinMode(X_STEP_PIN, OUTPUT);
   pinMode(X_DIR_PIN, OUTPUT);
@@ -221,6 +500,22 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(RAMP_LED_PIN, OUTPUT);
 
+//  bool isResetPressed = false;
+//  while (!isResetPressed){
+//    startModeMenu();
+//    lcd.clear();
+//    ClickEncoder::Button b = encoder->getButton();
+//    if (b != ClickEncoder::Open) {
+//      lcd.setCursor(8,4);
+//      switch (b) {
+//        case ClickEncoder::Held:
+//          isResetPressed = true;
+//      }
+//    }
+//  }
+
+  startModeMenu();
+  
   //motor activate and inactivate
   if (ENABLED==1) {
     digitalWrite(X_ENABLE_PIN, LOW);
