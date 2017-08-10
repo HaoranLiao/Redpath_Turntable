@@ -665,7 +665,8 @@ void loop()
   }
   dbgmsg("Finish");
   digitalWrite(X_ENABLE_PIN, HIGH);
-  for (;;); 
+//  for (;;); 
+  setup();
 }
   
 void rotate(int num_step, int buffer_size, int speed_rotation)
