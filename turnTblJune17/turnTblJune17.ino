@@ -133,7 +133,45 @@ void startModeMenu(){
       }
     }
   }
-  startModeSubMenu(MODE);   
+  startModeSubMenu(MODE);
+}
+
+bool confirmOrCancelMenu(){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Ready to start?");
+  lcd.setCursor(0,1);
+  lcd.print("Yes");
+  int16_t prev_state, curr_state;
+  prev_state = 0;
+  curr_state = 0;
+  bool isButtonPressed = false;
+  bool startJob = true;
+  String option;
+  while(!isButtonPressed){
+          curr_state = curr_state+encoder->getValue();     
+          
+          if(curr_state != prev_state) {
+            startJob = !startJob;
+            if(startJob){
+              option = "Yes";
+            }
+            else {
+              option = "No" ;
+            }
+            updateConfirmOrCancelMenu(option);
+            prev_state = curr_state;
+          }
+      
+          ClickEncoder::Button b = encoder->getButton();
+          if (b != ClickEncoder::Open) {
+            switch (b) {
+              case ClickEncoder::Clicked:
+                isButtonPressed = true;
+            }
+          }
+        }
+  return startJob;
 }
 
 void startModeSubMenu(int MODE){
@@ -391,6 +429,14 @@ void showSelectedMode(String MODE){
   lcd.print(MODE);
 }
 
+
+void updateConfirmOrCancelMenu(String option){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Ready to start?");
+  lcd.setCursor(0,1);
+  lcd.print(option);
+}
 void updateRotationAngleMenu(int ANGLE_PER_ROTATION){
   lcd.clear();
   lcd.setCursor(0,0);
@@ -623,50 +669,57 @@ void setup() {
 void loop()
 { 
   
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-//  lcd.setCursor(0, 1);
-//  // print the number of seconds since reset:
-//  lcd.print(millis() / 1000);
-  digitalWrite(LCD_BACKLIGHT_PIN, HIGH);
-
+  bool start = confirmOrCancelMenu();
+  if(!start){
+      //loop back to setup
+      setup();
+  } 
+  else { 
+    // set the cursor to column 0, line 1
+    // (note: line 1 is the second row, since counting begins with 0):
+  //  lcd.setCursor(0, 1);
+  //  // print the number of seconds since reset:
+  //  lcd.print(millis() / 1000);
+    digitalWrite(LCD_BACKLIGHT_PIN, HIGH);
   
-  dbgmsg("Start");
-  char count[20];
-  if (MODE==2) {
-    for (int i=0; i<num_rotation; i++) {
-      sprintf(count, "Rotation Count...%d/%d", i+1, num_rotation);
-      dbgmsg(count);
-      //Do partial rotation if in last rotation
-      if (i==num_rotation-1) {
-        digitalWrite(LED_BUILTIN, HIGH);
-        rotate(num_step_partial, rotation_buffer_size, speed_rotation);
-        digitalWrite(LED_BUILTIN, LOW);
+    
+    dbgmsg("Start");
+    char count[20];
+    if (MODE==2) {
+      for (int i=0; i<num_rotation; i++) {
+        sprintf(count, "Rotation Count...%d/%d", i+1, num_rotation);
+        dbgmsg(count);
+        //Do partial rotation if in last rotation
+        if (i==num_rotation-1) {
+          digitalWrite(LED_BUILTIN, HIGH);
+          rotate(num_step_partial, rotation_buffer_size, speed_rotation);
+          digitalWrite(LED_BUILTIN, LOW);
+        }
+        //Do full rotation if not in last rotation
+        else {
+          digitalWrite(LED_BUILTIN, HIGH);
+          rotate(num_step_full, rotation_buffer_size, speed_rotation);
+          digitalWrite(LED_BUILTIN, LOW);
+        }
+        trigger_camera(3000, pause_bw_rotation);
+  //      delay(pause_bw_rotation); 
       }
-      //Do full rotation if not in last rotation
-      else {
+    }
+    else {
+      for (int i=0; i<num_rotation; i++) {
+        sprintf(count, "Rotation Count...%d/%d", i+1, num_rotation);
+        dbgmsg(count);
         digitalWrite(LED_BUILTIN, HIGH);
         rotate(num_step_full, rotation_buffer_size, speed_rotation);
         digitalWrite(LED_BUILTIN, LOW);
+        delay(pause_bw_rotation); 
       }
-      trigger_camera(3000, pause_bw_rotation);
-//      delay(pause_bw_rotation); 
     }
+    dbgmsg("Finish");
+    digitalWrite(X_ENABLE_PIN, HIGH);
+  //  for (;;);
+    setup(); 
   }
-  else {
-    for (int i=0; i<num_rotation; i++) {
-      sprintf(count, "Rotation Count...%d/%d", i+1, num_rotation);
-      dbgmsg(count);
-      digitalWrite(LED_BUILTIN, HIGH);
-      rotate(num_step_full, rotation_buffer_size, speed_rotation);
-      digitalWrite(LED_BUILTIN, LOW);
-      delay(pause_bw_rotation); 
-    }
-  }
-  dbgmsg("Finish");
-  digitalWrite(X_ENABLE_PIN, HIGH);
-//  for (;;); 
-  setup();
 }
   
 void rotate(int num_step, int buffer_size, int speed_rotation)
